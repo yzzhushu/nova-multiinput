@@ -7,7 +7,7 @@
     >
         <template #field>
             <Splitter
-                style="height: 320px"
+                style="height: calc(320px + .5rem)"
                 :class="errorClasses"
             >
                 <SplitterPanel>
@@ -46,6 +46,12 @@ export default {
                 {id: 12, name: 'n12'},
                 {id: 13, name: 'n13'},
                 {id: 14, name: 'n14'},
+                {id: 15, name: 'n15'},
+                {id: 16, name: 'n16'},
+                {id: 17, name: 'n17'},
+                {id: 18, name: 'n18'},
+                {id: 19, name: 'n19'},
+                {id: 20, name: 'n20'},
             ],
             columns: [
                 {field: 'id', header: '编码'},
