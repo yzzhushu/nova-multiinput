@@ -7,14 +7,26 @@
     >
         <template #field>
             <Splitter
-                style="height: calc(320px + .5rem)"
+                style="height: calc(400px + .5rem)"
                 :class="errorClasses"
             >
                 <SplitterPanel>
-                    <HxTable :columns="columns" :lists="lists" @row:selected="aaaaaa"/>
+                    <HxTable
+                        :columns="columns"
+                        :lists="lists"
+                        style="min-height: 400px"
+                        @row:selected="removeInput"
+                    />
                 </SplitterPanel>
                 <SplitterPanel>
-                    <div>fawfaw</div>
+                    <HxInput
+                        :isTextArea="true"
+                        customClass="py-3"
+                        customStyle="height: calc(100% - 1.5rem)"
+                        :placeholder="field.placeholder || '请输入'"
+                        :value="input"
+                        @update:value="handleInput"
+                    />
                 </SplitterPanel>
             </Splitter>
         </template>
@@ -31,47 +43,105 @@ export default {
 
     data() {
         return {
-            lists: [
-                {id: 1, name: 'n1'},
-                {id: 2, name: 'n2'},
-                {id: 3, name: 'n3'},
-                {id: 4, name: 'n4'},
-                {id: 5, name: 'n5'},
-                {id: 6, name: 'n6'},
-                {id: 7, name: 'n7'},
-                {id: 8, name: 'n8'},
-                {id: 9, name: 'n9'},
-                {id: 10, name: 'n10'},
-                {id: 11, name: 'n11'},
-                {id: 12, name: 'n12'},
-                {id: 13, name: 'n13'},
-                {id: 14, name: 'n14'},
-                {id: 15, name: 'n15'},
-                {id: 16, name: 'n16'},
-                {id: 17, name: 'n17'},
-                {id: 18, name: 'n18'},
-                {id: 19, name: 'n19'},
-                {id: 20, name: 'n20'},
-            ],
-            columns: [
-                {field: 'id', header: '编码'},
-                {field: 'name', header: '名称'},
-            ]
+            lists: [],
+            check: {},
+            input: '',
+            index: 'id',
+            columns: [],
         }
     },
 
     methods: {
-        aaaaaa(e) {
-            console.log(11111);
-            console.log(e.data);
+
+        removeInput(column) {
+            const index = column.data[this.index];
+            delete this.check[index];
+            this.drawTable();
+        },
+
+        handleInput(value) {
+            let latest = this.formatInput(value);
+            let _limit = this.field.limit || 500;
+            if (latest > _limit) {
+                Nova.error('单次最多录入' + _limit + '条记录');
+                Nova.error('请删减后重新录入');
+                return;
+            }
+            const exists = this.lists.length;
+            if (exists + latest >= _limit) {
+                Nova.error('累计最多录入' + _limit + '条记录');
+                Nova.error('已录入：' + exists + '，本次新录入：' + latest);
+                return;
+            }
+            const options = this.field.options;
+            if (typeof options === 'string') {
+                this.requestLists();
+            } else {
+                if (typeof options !== 'object' || options.length === 0) {
+                    Nova.error('请先配置options选项');
+                    return;
+                }
+            }
+        },
+
+        // 绘制列表数据
+        drawTable() {
+            let lists = [];
+            let index;
+            for (index in this.check) {
+                lists.push(this.check[index]);
+            }
+            this.lists = lists;
+        },
+
+        // 请求获取数据
+        requestLists() {
+            Nova
+                .request()
+                .post(this.field.options, {q: this.input})
+                .then(response=> {
+                    const result = response.data.data;
+                    if (result.length === 0) return;
+
+                    result.map(item => {
+                        if (item[this.index] === undefined) return;
+                        this.check[item[this.index]] = item;
+                    });
+                    this.drawTable();
+                });
+        },
+
+        // 处理输入内容
+        formatInput(value) {
+            let input = value
+                .replaceAll(' ', '')
+                .replaceAll('\n', ',')
+                .replaceAll(/\W+/g, ',');
+            if (!this.field.supportABC)
+                input = input.replaceAll(/\D+/g, ',') + ',';
+
+            let filter = {};
+            let unique = 0;
+            input.split(',').map((item) => {
+                if (item === '') return;
+                filter[item] = true;
+                unique++;
+            });
+            this.input = Object.keys(filter).join(',');
+            return unique;
         },
 
         setInitialValue() {
-            this.value = this.field.value || ''
+            this.columns = this.field.columns;
+            if (typeof this.columns[0] === 'object' &&
+                this.columns[0].field !== undefined)
+                this.index = this.columns[0].field;
+
+            // this.value = this.field.value || ''
         },
 
         fill(formData) {
-            formData.append(this.fieldAttribute, this.value || '')
+            formData.append(this.fieldAttribute, JSON.stringify(Object.keys(this.check)))
         },
     },
 }

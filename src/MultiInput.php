@@ -17,19 +17,118 @@ class MultiInput extends Field
     /**
      * 请求链接
      *
-     * @var string|null
+     * @var string|array
      * */
-    public string|null $options;
+    public string|array $options;
+
+    /**
+     * table显示的字段
+     *
+     * @var array
+     * */
+    public array $columns = [];
+
+    /**
+     * table是否显示索引
+     *
+     * @var bool
+     * */
+    public bool $withIndex = false;
+
+    /**
+     * 将字段值转换为整数
+     *
+     * @var bool
+     * */
+    public bool $formatInt = false;
+
+    /**
+     * 是否支持录入字母
+     *
+     * @var bool
+     * */
+    public bool $supportABC = false;
 
     /**
      * 请求链接
-     * @param string|null $options
+     * @param string|array $options
      *
      * @return self
      * */
-    public function options(string|null $options): self
+    public function options(string|array $options): self
     {
         $this->options = $options;
         return $this;
+    }
+
+    /**
+     * table显示的字段
+     * @param array $columns
+     *
+     * @return self
+     * */
+    public function columns(array $columns = []): self
+    {
+        $this->columns = $columns;
+        return $this;
+    }
+
+    /**
+     * table是否显示索引
+     * @param bool $boolean
+     *
+     * @return self
+     * */
+    public function withIndex(bool $boolean = true): self
+    {
+        $this->withIndex = $boolean;
+        return $this;
+    }
+
+    /**
+     * 将字段值转换为整数
+     * @param bool $boolean
+     *
+     * @return self
+     */
+    public function formatInt(bool $boolean = true): self
+    {
+        $this->formatInt = $boolean;
+        return $this;
+    }
+
+    /**
+     * 是否支持录入字母
+     * @param bool $boolean
+     *
+     * @return self
+     * */
+    public function supportABC(bool $boolean = true): self
+    {
+        $this->supportABC = $boolean;
+        return $this;
+    }
+
+    /**
+     * Prepare the field for JSON serialization.
+     *
+     * @return array<string, mixed>
+     * @throws \Exception
+     */
+    public function jsonSerialize(): array
+    {
+        if (!isset($this->options)) {
+            throw new \Exception(__('Options is required'));
+        }
+
+        return with(app(NovaRequest::class), function ($request) {
+            return array_merge([
+                'options'    => $this->options ?? [],
+                'columns'    => $this->columns,
+                'withIndex'  => $this->withIndex,
+                'formatInt'  => $this->formatInt,
+                'supportABC' => $this->supportABC,
+            ], parent::jsonSerialize());
+        });
     }
 }
