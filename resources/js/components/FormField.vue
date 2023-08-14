@@ -7,22 +7,22 @@
     >
         <template #field>
             <Splitter
-                style="height: calc(400px + .5rem)"
+                style="height: calc(360px + .5rem)"
                 :class="errorClasses"
             >
                 <SplitterPanel>
                     <HxTable
                         :columns="columns"
                         :lists="lists"
-                        style="min-height: 400px"
+                        style="min-height: 360px"
                         @row:selected="removeInput"
                     />
                 </SplitterPanel>
                 <SplitterPanel>
                     <HxInput
                         :isTextArea="true"
-                        customClass="py-3"
-                        customStyle="height: calc(100% - 1.5rem)"
+                        customClass="px-0"
+                        customStyle="height: calc(100% - 1.5rem);"
                         :placeholder="field.placeholder || '请输入'"
                         :value="input"
                         @update:value="handleInput"
@@ -77,10 +77,7 @@ export default {
             if (typeof options === 'string') {
                 this.requestLists();
             } else {
-                if (typeof options !== 'object' || options.length === 0) {
-                    Nova.error('请先配置options选项');
-                    return;
-                }
+                Nova.error('咱不支持该类型');
             }
         },
 
@@ -137,7 +134,10 @@ export default {
                 this.columns[0].field !== undefined)
                 this.index = this.columns[0].field;
 
-            // this.value = this.field.value || ''
+            const initValue = this.field.value;
+            if (initValue !== null) {
+                this.handleInput(initValue.join(','));
+            }
         },
 
         fill(formData) {
