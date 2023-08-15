@@ -18,20 +18,6 @@ import request from "../request";
 export default {
     mixins: [request],
 
-    props: ['index', 'field'],
-
-    data() {
-        return {
-            lists: [],
-        }
-    },
-
-    computed: {
-        columns() {
-            return this.field.columns;
-        },
-    },
-
     mounted() {
         this.loadLists()
     },

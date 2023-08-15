@@ -1,9 +1,10 @@
 export default {
-    props: ['field'],
+    props: ['index', 'field'],
 
     data() {
         return {
-            loading: false
+            loading: false,
+            lists: []
         }
     },
 
@@ -23,6 +24,12 @@ export default {
                     console.log(response.data.data)
                     this.lists = response.data.data;
                 });
+        }
+    },
+
+    computed: {
+        columns() {
+            return this.field.columns;
         }
     }
 }

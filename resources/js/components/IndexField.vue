@@ -11,7 +11,7 @@
                 distance="12"
             >
                 <template #default>
-                    <span class="link-default">{{ display }}</span>
+                    <span class="link-default">{{ field.displayedAs || field.value.length }}</span>
                 </template>
                 <template #content>
                     <HxTable
@@ -30,24 +30,6 @@
 <script>
 import request from "../request";
 export default {
-    mixins: [request],
-
-    props: ['index', 'resource', 'resourceName', 'resourceId', 'field'],
-
-    data() {
-        return {
-            lists: []
-        }
-    },
-
-    computed: {
-        columns() {
-            return this.field.columns;
-        },
-
-        display() {
-            return this.field.displayedAs || this.field.value.length;
-        }
-    }
+    mixins: [request]
 }
 </script>
