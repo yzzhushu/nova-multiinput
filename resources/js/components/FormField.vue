@@ -19,14 +19,16 @@
                     />
                 </SplitterPanel>
                 <SplitterPanel>
-                    <HxInput
-                        :isTextArea="true"
-                        customClass="px-0"
-                        customStyle="height: calc(100% - 1.5rem);"
-                        :placeholder="field.placeholder || '请输入'"
-                        :value="input"
-                        @update:value="handleInput"
-                    />
+                    <div class="w-full h-full p-3 px-0">
+                        <textarea
+                            class="w-full h-full form-control form-input form-input-bordered
+                                border-none outline-none px-0 resize-none text-base"
+                            style="box-shadow: none;"
+                            :placeholder="field.placeholder || '请输入'"
+                            v-model="value"
+                            @change="handleInput($event.target.value)"
+                        ></textarea>
+                    </div>
                 </SplitterPanel>
             </Splitter>
         </template>
@@ -45,7 +47,7 @@ export default {
         return {
             lists: [],
             check: {},
-            input: '',
+            value: '',
             index: 'id',
             columns: [],
         }
@@ -56,7 +58,7 @@ export default {
         removeInput(column) {
             const index = column.data[this.index];
             delete this.check[index];
-            this.drawTable();
+            this.lists.splice(column.index, 1);
         },
 
         handleInput(value) {
@@ -70,7 +72,7 @@ export default {
             const exists = this.lists.length;
             if (exists + latest >= _limit) {
                 Nova.error('累计最多录入' + _limit + '条记录');
-                Nova.error('已录入：' + exists + '，本次新录入：' + latest);
+                Nova.error('已存在：' + exists + '，本次新录入：' + latest);
                 return;
             }
             const options = this.field.options;
@@ -84,22 +86,30 @@ export default {
         // 绘制列表数据
         drawTable() {
             let lists = [];
-            let index;
-            for (index in this.check) {
-                lists.push(this.check[index]);
-            }
+            const int = this.field.formatInt;
+            Object.keys(this.check).sort((a, b) => {
+                if (int) return parseInt(a) - parseInt(b);
+                return a.localeCompare(b);
+            }).map((item) => {
+                lists.push(this.check[item]);
+            });
             this.lists = lists;
         },
 
         // 请求获取数据
         requestLists() {
+            const q = this.value;
+            if (q === '') return;
+            this.value = '数据解析中...';
+
             Nova
                 .request()
-                .post(this.field.options, {q: this.input})
+                .post(this.field.options, {q: q})
                 .then(response=> {
+                    this.value = '';
                     const result = response.data.data;
-                    if (result.length === 0) return;
-
+                    if (result.length === 0)
+                        return Nova.error('未找到匹配的数据');
                     result.map(item => {
                         if (item[this.index] === undefined) return;
                         this.check[item[this.index]] = item;
@@ -115,19 +125,29 @@ export default {
                 .replaceAll('\n', ',')
                 .replaceAll(/\W+/g, ',');
             if (!this.field.supportABC)
-                input = input.replaceAll(/\D+/g, ',') + ',';
+                input = input.replaceAll(/\D+/g, ',');
 
-            let filter = {};
-            let unique = 0;
+            let filter = [];
+            let errors = {};
             input.split(',').map((item) => {
                 if (item === '') return;
-                filter[item] = true;
-                unique++;
+                if (this.field.formatInt)
+                    item = parseInt(item);
+                if (this.check[item] !== undefined)
+                    return errors[item] = true;
+                if (filter.includes(item))
+                    return errors[item] = true;
+                filter.push(item);
             });
-            this.input = Object.keys(filter).join(',');
-            return unique;
+            errors = Object.keys(errors);
+            if (errors.length > 0) {
+                Nova.error('以下内容重复，已自动过滤：' + errors.join(','));
+            }
+            this.value = filter.join(',');
+            return filter.length;
         },
 
+        // 初始化数据
         setInitialValue() {
             this.columns = this.field.columns;
             if (typeof this.columns[0] === 'object' &&

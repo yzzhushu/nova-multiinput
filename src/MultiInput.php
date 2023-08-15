@@ -2,6 +2,8 @@
 
 namespace Jshxl\MultiInput;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -107,6 +109,27 @@ class MultiInput extends Field
     {
         $this->supportABC = $boolean;
         return $this;
+    }
+
+    /**
+     * Hydrate the given attribute on the model based on the incoming request.
+     * @param NovaRequest $request
+     * @param string $requestAttribute
+     * @param Model $model
+     * @param string $attribute
+     *
+     * @return void
+     */
+    protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute): void
+    {
+        if (!$request->exists($requestAttribute)) return;
+
+        $value = collect(json_decode($request->input($requestAttribute), true))
+            ->map(function ($item) {
+                return $this->formatInt ? intval($item) : $item;
+            })
+            ->all();
+        $model->forceFill([Str::replace('.', '->', $attribute) => $value]);
     }
 
     /**
