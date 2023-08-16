@@ -103,7 +103,7 @@ export default {
         // 初始化数据
         setInitialValue() {
             const value = this.field.value;
-            if (value !== null) {
+            if (value !== null && value.length > 0) {
                 this.handleInput(value.join(','));
             }
         },
