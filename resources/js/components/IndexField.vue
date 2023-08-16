@@ -8,7 +8,7 @@
                 theme="plain"
                 @show="loadLists"
                 :auto-hide="true"
-                distance="12"
+                distance="6"
             >
                 <template #default>
                     <span class="link-default">{{ field.displayedAs || field.value.length }}</span>
@@ -30,6 +30,11 @@
 <script>
 import request from "../request";
 export default {
-    mixins: [request]
+    mixins: [request],
+
+    mounted() {
+        const value = this.field.value;
+        this.value = value.join(',');
+    },
 }
 </script>

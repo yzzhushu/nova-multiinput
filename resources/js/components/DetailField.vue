@@ -19,7 +19,11 @@ export default {
     mixins: [request],
 
     mounted() {
-        this.loadLists()
+        const value = this.field.value;
+        if (value.length === 0) return;
+
+        this.value = value.join(',');
+        this.loadLists();
     },
 }
 </script>

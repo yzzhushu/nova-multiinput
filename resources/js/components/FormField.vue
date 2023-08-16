@@ -37,24 +37,12 @@
 
 <script>
 import {FormField, HandlesValidationErrors} from 'laravel-nova';
+import request from "../request";
 
 export default {
-    mixins: [FormField, HandlesValidationErrors],
-
-    props: ['resourceName', 'resourceId', 'field'],
-
-    data() {
-        return {
-            lists: [],
-            check: {},
-            value: '',
-            index: 'id',
-            columns: [],
-        }
-    },
+    mixins: [FormField, HandlesValidationErrors, request],
 
     methods: {
-
         removeInput(column) {
             const index = column.data[this.index];
             delete this.check[index];
@@ -70,52 +58,17 @@ export default {
                 return;
             }
             const exists = this.lists.length;
-            if (exists + latest >= _limit) {
+            if (exists + latest > _limit) {
                 Nova.error('累计最多录入' + _limit + '条记录');
                 Nova.error('已存在：' + exists + '，本次新录入：' + latest);
                 return;
             }
             const options = this.field.options;
             if (typeof options === 'string') {
-                this.requestLists();
+                this.loadLists();
             } else {
-                Nova.error('咱不支持该类型');
+                Nova.error('暂不支持该类型');
             }
-        },
-
-        // 绘制列表数据
-        drawTable() {
-            let lists = [];
-            const int = this.field.formatInt;
-            Object.keys(this.check).sort((a, b) => {
-                if (int) return parseInt(a) - parseInt(b);
-                return a.localeCompare(b);
-            }).map((item) => {
-                lists.push(this.check[item]);
-            });
-            this.lists = lists;
-        },
-
-        // 请求获取数据
-        requestLists() {
-            const q = this.value;
-            if (q === '') return;
-            this.value = '数据解析中...';
-
-            Nova
-                .request()
-                .post(this.field.options, {q: q})
-                .then(response=> {
-                    this.value = '';
-                    const result = response.data.data;
-                    if (result.length === 0)
-                        return Nova.error('未找到匹配的数据');
-                    result.map(item => {
-                        if (item[this.index] === undefined) return;
-                        this.check[item[this.index]] = item;
-                    });
-                    this.drawTable();
-                });
         },
 
         // 处理输入内容
@@ -129,10 +82,10 @@ export default {
 
             let filter = [];
             let errors = {};
+            let intInt = this.field.formatInt;
             input.split(',').map((item) => {
                 if (item === '') return;
-                if (this.field.formatInt)
-                    item = parseInt(item);
+                item = intInt ? parseInt(item) : item.toString();
                 if (this.check[item] !== undefined)
                     return errors[item] = true;
                 if (filter.includes(item))
@@ -149,17 +102,13 @@ export default {
 
         // 初始化数据
         setInitialValue() {
-            this.columns = this.field.columns;
-            if (typeof this.columns[0] === 'object' &&
-                this.columns[0].field !== undefined)
-                this.index = this.columns[0].field;
-
-            const initValue = this.field.value;
-            if (initValue !== null) {
-                this.handleInput(initValue.join(','));
+            const value = this.field.value;
+            if (value !== null) {
+                this.handleInput(value.join(','));
             }
         },
 
+        // 保存数据
         fill(formData) {
             formData.append(this.fieldAttribute, JSON.stringify(Object.keys(this.check)))
         },

@@ -141,7 +141,7 @@ class MultiInput extends Field
     public function jsonSerialize(): array
     {
         if (!isset($this->options)) {
-            throw new \Exception(__('Options is required'));
+            throw new \Exception(__('MultiInput option is required'));
         }
 
         return with(app(NovaRequest::class), function ($request) {
