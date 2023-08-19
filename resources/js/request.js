@@ -22,6 +22,7 @@ export default {
         // 获取数据
         loadLists() {
             if (this.loading) return;
+            if (this.value === '') return;
             this.loading = true;
 
             Nova
