@@ -15,7 +15,7 @@ export default {
         if (typeof this.columns[0] === 'object' &&
             this.columns[0].field !== undefined)
             this.index = this.columns[0].field;
-        console.log('MultiInput index key: ' + this.index);
+        // console.log('MultiInput index key: ' + this.index);
     },
 
     methods: {
