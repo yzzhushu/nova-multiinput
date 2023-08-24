@@ -14,6 +14,7 @@
                     <HxTable
                         :columns="columns"
                         :lists="lists"
+                        scrollHeight="360px"
                         style="min-height: 360px"
                         @row:selected="removeInput"
                     />

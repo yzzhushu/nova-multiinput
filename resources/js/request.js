@@ -15,7 +15,6 @@ export default {
         if (typeof this.columns[0] === 'object' &&
             this.columns[0].field !== undefined)
             this.index = this.columns[0].field;
-        // console.log('MultiInput index key: ' + this.index);
     },
 
     methods: {
@@ -61,6 +60,11 @@ export default {
     computed: {
         columns() {
             return this.field.columns;
+        },
+
+        initScrollHeight() {
+            const value = this.field.value || [];
+            return Math.min((value.length + 1) * 40, 360) + 'px';
         }
     }
 }
