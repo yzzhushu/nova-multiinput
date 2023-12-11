@@ -1,6 +1,6 @@
 <template>
     <DefaultField
-        :field="field"
+        :field="currentField"
         :errors="errors"
         :show-help-text="showHelpText"
         :full-width-content="fullWidthContent"
@@ -25,7 +25,7 @@
                             class="w-full h-full form-control form-input form-input-bordered
                                 border-none outline-none px-0 resize-none text-base"
                             style="box-shadow: none;"
-                            :placeholder="field.placeholder || '请输入'"
+                            :placeholder="currentField.placeholder || '请输入'"
                             v-model="value"
                             @change="handleInput($event.target.value)"
                         ></textarea>
@@ -37,11 +37,11 @@
 </template>
 
 <script>
-import {FormField, HandlesValidationErrors} from 'laravel-nova';
+import {DependentFormField, HandlesValidationErrors} from 'laravel-nova';
 import request from "../request";
 
 export default {
-    mixins: [FormField, HandlesValidationErrors, request],
+    mixins: [DependentFormField, HandlesValidationErrors, request],
 
     methods: {
         removeInput(column) {
@@ -52,7 +52,7 @@ export default {
 
         handleInput(value) {
             let latest = this.formatInput(value);
-            let _limit = this.field.limit || 500;
+            let _limit = this.currentField.limit || 500;
             if (latest > _limit) {
                 Nova.error('单次最多录入' + _limit + '条记录');
                 Nova.error('请删减后重新录入');
@@ -64,7 +64,7 @@ export default {
                 Nova.error('已存在：' + exists + '，本次新录入：' + latest);
                 return;
             }
-            const options = this.field.options;
+            const options = this.currentField.options;
             if (typeof options === 'string') {
                 this.loadLists();
             } else {
@@ -78,12 +78,12 @@ export default {
                 .replaceAll(' ', '')
                 .replaceAll('\n', ',')
                 .replaceAll(/\W+/g, ',');
-            if (!this.field.supportABC)
+            if (!this.currentField.supportABC)
                 input = input.replaceAll(/\D+/g, ',');
 
             let filter = [];
             let errors = {};
-            let intInt = this.field.formatInt;
+            let intInt = this.currentField.formatInt;
             input.split(',').map((item) => {
                 if (item === '') return;
                 item = intInt ? parseInt(item) : item.toString();
@@ -103,7 +103,7 @@ export default {
 
         // 初始化数据
         setInitialValue() {
-            const value = this.field.value;
+            const value = this.currentField.value;
             if (value !== null && value.length > 0) {
                 this.handleInput(value.join(','));
             }
